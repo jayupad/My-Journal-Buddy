@@ -1,0 +1,151 @@
+/* Reset some default styling */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif; /* Modern font */
+}
+
+/* Style the body */
+body {
+    background: #f9f9f9;
+    color: #333;
+    line-height: 1.6; /* Improved readability */
+}
+
+/* Style the header */
+header {
+    background-color: #202020; /* Sleek color */
+    color: #fff;
+    padding: 10px 20px;
+    text-align: center; /* Centered header text */
+}
+
+/* Style the navigation */
+nav {
+    display: flex;
+    justify-content: space-around; /* Evenly space around */
+    padding: 10px 0; /* Add padding to top and bottom */
+}
+
+/* Style the buttons */
+nav button {
+    background: transparent;
+    border: 2px solid #fff; /* Make border thicker for better visibility */
+    color: #fff;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: all 0.3s ease; /* Transition for smooth color change */
+}
+
+nav button:hover {
+    background-color: #fff;
+    color: #202020; /* Hover color change */
+}
+
+/* Main content styles */
+main {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    gap: 20px;
+    padding: 20px;
+}
+
+/* Journal section styles */
+#journalSection {
+    background-color: #fff;
+    padding: 20px;
+    border: none; /* Remove border */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
+}
+
+/* Entries grid styles */
+#entries {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+
+
+/* Entry card styles */
+.entry {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 10px; /* Add space between entries */
+}
+
+/* Sidebar styles */
+aside {
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #ccc;
+}
+
+/* Footer styles */
+footer {
+    background-color: #333;
+    color: #fff;
+    padding: 10px 20px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+/* Chat interface styles */
+#chatInterface {
+    background: #fff;
+    color: #333;
+    padding: 10px;
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+}
+.diary-entry {
+    display: block; /* Make the link display as a block to fill the container */
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 10px; /* Add space between entries */
+    text-decoration: none; /* Remove underline from links */
+    color: #333; /* Set link text color */
+    transition: background-color 0.3s ease; /* Smooth background color transition on hover */
+}
+
+.diary-entry:hover {
+    background-color: #f5f5f5; /* Change background color on hover for visual feedback */
+    text-decoration: none; /* Ensure underline does not appear on hover */
+}
+
+/* Image upload section */
+.entry-image-upload {
+    margin: 20px 0;
+}
+
+.entry-image-upload label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.entry-image-upload input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    main {
+        grid-template-columns: 1fr;
+    }
+
+    nav button {
+        flex: 1; /* Buttons take equal space */
+        text-align: center;
+        margin-bottom: 10px; /* Add space between buttons on small screens */
+    }
+}
