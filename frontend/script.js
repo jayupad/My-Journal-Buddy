@@ -10,38 +10,58 @@ document.addEventListener('DOMContentLoaded', function() {
     const entriesSection = document.getElementById('entries');
     const favoritesSection = document.getElementById('favorites');
     const recentsSection = document.getElementById('recents');
+    const searchInput = document.getElementById('searchEntries');
 
-    // Function to create and return a new entry anchor
-    function createEntryAnchor(entry, index) {
-        const entryAnchor = document.createElement('a');
-        // You can change this href to point to the actual URL or use a routing mechanism
-        // If you have individual pages for each entry, the href would be the URL to that page
-        entryAnchor.href = `#entry${index}`; 
-        entryAnchor.classList.add('diary-entry');
-        entryAnchor.innerHTML = `<h3>${entry.content}</h3><p>${entry.date}</p>`;
-        entryAnchor.addEventListener('click', function(event) {
-            event.preventDefault();
-            // Implement the logic to handle click event here.
-            // For instance, you could show the entry content in a modal or navigate to a detail page.
-            console.log(`You clicked on ${entry.content}`);
-        });
-        return entryAnchor;
+    // Function to create and return a new entry element
+    function createEntryElement(entry, index) {
+        const entryDiv = document.createElement('div');
+        entryDiv.className = 'entry';
+        entryDiv.innerHTML = `<h3>${entry.content}</h3><p>${entry.date}</p>`;
+        // Add event listener if needed here
+        return entryDiv;
     }
 
+    // Function to filter entries by search query
+    function filterEntries(query) {
+        const lowerCaseQuery = query.toLowerCase();
+        const filteredEntries = entries.filter(entry => 
+            entry.content.toLowerCase().includes(lowerCaseQuery) ||
+            entry.date.toLowerCase().includes(lowerCaseQuery)
+        );
+        updateEntriesDisplay(filteredEntries);
+    }
+
+    // Function to update the display of entries
+    function updateEntriesDisplay(entriesToShow) {
+        entriesSection.innerHTML = ''; // Clear current entries
+        entriesToShow.forEach((entry, index) => {
+            entriesSection.appendChild(createEntryElement(entry, index));
+        });
+    }
+
+    // Attach event listener to search bar
+    searchInput.addEventListener('keyup', function() {
+        filterEntries(searchInput.value);
+    });
+
+    // Add entries to the main entries section
     entries.forEach((entry, index) => {
-        // Add entry to main entries section
-        entriesSection.appendChild(createEntryAnchor(entry, index));
+        entriesSection.appendChild(createEntryElement(entry, index));
 
         // Add entry to favorites if applicable
         if (entry.favorite) {
-            favoritesSection.appendChild(createEntryAnchor(entry, index));
+            const favEntry = createEntryElement(entry, index);
+            favEntry.classList.add('favorite'); // Add class for favorite entries if needed
+            favoritesSection.appendChild(favEntry);
         }
     });
 
     // Add the most recent entries to the 'Recents' section
-    // Let's assume we want the 3 most recent entries
-    const recentEntries = entries.slice(-3);
+    const recentEntries = entries.slice(-3).reverse(); // Assuming you want the latest first
     recentEntries.forEach((entry, index) => {
-        recentsSection.appendChild(createEntryAnchor(entry, index));
+        recentsSection.appendChild(createEntryElement(entry, index));
     });
+
+    // Initial display of entries
+    updateEntriesDisplay(entries);
 });
