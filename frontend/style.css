@@ -3,7 +3,11 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Roboto', sans-serif; /* Modern font */
+    font-family: 'Merriweather', serif; /* Classic font for the body text */
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Merriweather', cursive; 
 }
 
 /* Style the body */
