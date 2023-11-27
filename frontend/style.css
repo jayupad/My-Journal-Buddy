@@ -8,15 +8,15 @@
 
 /* Style the body */
 body {
-    background: #f9f9f9;
-    color: #333;
+    background: #EED8C0; /* Warm beige background */
+    color: #333; /* Dark gray for text */
     line-height: 1.6; /* Improved readability */
 }
 
 /* Style the header */
 header {
-    background-color: #202020; /* Sleek color */
-    color: #fff;
+    background-color: #D3C1AC; /* Slightly darker beige for the header */
+    color: #333;
     padding: 10px 20px;
     text-align: center; /* Centered header text */
 }
@@ -24,23 +24,44 @@ header {
 /* Style the navigation */
 nav {
     display: flex;
-    justify-content: space-around; /* Evenly space around */
-    padding: 10px 0; /* Add padding to top and bottom */
+    justify-content: space-between; /* Align items to the sides */
+    padding: 10px 0;
+}
+
+#homeButton {
+  background: #A68B60; /* Warm beige for buttons */
+  border: none; /* Remove border for a flatter look */
+  color: #fff;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 20px; /* Rounded corners for a modern look */
+}
+
+#homeButton:hover {
+  background-color: #8C7A50; /* Darker shade for hover effect */
+  color: #ddd; /* Optional: Change the text color on hover */
+}
+
+#navButtons {
+    display: flex;
+    gap: 10px; /* Spacing between buttons */
 }
 
 /* Style the buttons */
-nav button {
-    background: transparent;
-    border: 2px solid #fff; /* Make border thicker for better visibility */
+#navButtons button {
+    background: #A68B60; /* Warm beige for buttons */
+    border: none; /* Remove border for a flatter look */
     color: #fff;
-    padding: 10px 15px;
+    padding: 10px 20px;
     cursor: pointer;
-    transition: all 0.3s ease; /* Transition for smooth color change */
+    transition: all 0.3s ease;
+    border-radius: 20px; /* Rounded corners for a modern look */
 }
 
-nav button:hover {
-    background-color: #fff;
-    color: #202020; /* Hover color change */
+#navButtons button:hover {
+    background-color: #8C7A50; /* Darker shade for hover effect */
+    color: #ddd; /* Optional: Change the text color on hover */
 }
 
 /* Main content styles */
@@ -53,7 +74,7 @@ main {
 
 /* Journal section styles */
 #journalSection {
-    background-color: #fff;
+    background-color: #ffffff; /* White for contrast against the beige */
     padding: 20px;
     border: none; /* Remove border */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
@@ -66,26 +87,63 @@ main {
     gap: 20px;
 }
 
-
-
 /* Entry card styles */
 .entry {
-    background-color: #fff;
-    border: 1px solid #ccc;
+    background-color: #ffffff; /* White background for entries */
+    border: 1px solid #ccc; /* Light gray border for definition */
     padding: 15px;
-    margin-bottom: 10px; /* Add space between entries */
+    border-radius: 4px; /* Slight rounding of corners */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+    transition: transform 0.3s ease; /* Smooth transition for hover effect */
+}
+
+.entry:hover {
+    transform: translateY(-5px); /* Slight raise effect on hover */
 }
 
 /* Sidebar styles */
 aside {
-    background-color: #fff;
+    background-color: #ffffff; /* White background for sidebar */
     padding: 20px;
-    border: 1px solid #ccc;
+    border: 1px solid #ccc; /* Light gray border */
+}
+
+/* Favorites and Recents styles */
+#favoritesContainer,
+#recentsContainer {
+    background-color: #ffffff; /* White background for containers */
+    border: 1px solid #ccc; /* Light gray border for definition */
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px; /* Rounded corners for the containers */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Shadow for depth */
+}
+
+#favoritesContainer h2,
+#recentsContainer h2 {
+    color: #333; /* Dark gray color for the titles */
+    margin-bottom: 10px; /* Spacing below the titles */
+}
+
+#favoritesContainer .diary-entry,
+#recentsContainer .diary-entry {
+    background-color: #f5f3f0; /* Light beige for entries background */
+    color: #333; /* Dark gray for text color */
+    border: none; /* No border for a cleaner look */
+    padding: 10px 15px;
+    margin-bottom: 8px; /* Space between entries */
+    border-radius: 4px; /* Slight rounding of corners */
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05); /* Inner shadow for subtle depth */
+}
+
+#favoritesContainer .diary-entry:hover,
+#recentsContainer .diary-entry:hover {
+    background-color: #e6e2d3; /* Slightly darker beige on hover */
 }
 
 /* Footer styles */
 footer {
-    background-color: #333;
+    background-color: #333; /* Dark footer for contrast */
     color: #fff;
     padding: 10px 20px;
     position: fixed;
@@ -95,29 +153,14 @@ footer {
 
 /* Chat interface styles */
 #chatInterface {
-    background: #fff;
-    color: #333;
+    background: #ffffff; /* White background for chat interface */
+    color: #333; /* Dark gray text for readability */
     padding: 10px;
     position: fixed;
     bottom: 10px;
     right: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid #ccc; /* Light gray border */
     cursor: pointer;
-}
-.diary-entry {
-    display: block; /* Make the link display as a block to fill the container */
-    background-color: #fff;
-    border: 1px solid #ccc;
-    padding: 15px;
-    margin-bottom: 10px; /* Add space between entries */
-    text-decoration: none; /* Remove underline from links */
-    color: #333; /* Set link text color */
-    transition: background-color 0.3s ease; /* Smooth background color transition on hover */
-}
-
-.diary-entry:hover {
-    background-color: #f5f5f5; /* Change background color on hover for visual feedback */
-    text-decoration: none; /* Ensure underline does not appear on hover */
 }
 
 /* Image upload section */
@@ -133,8 +176,8 @@ footer {
 .entry-image-upload input[type="file"] {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    border: 1px solid #ccc; /* Light gray border */
+    border-radius: 5px; /* Slightly rounded corners for the input */
 }
 
 /* Responsive design */
@@ -142,10 +185,38 @@ footer {
     main {
         grid-template-columns: 1fr;
     }
-
-    nav button {
-        flex: 1; /* Buttons take equal space */
-        text-align: center;
-        margin-bottom: 10px; /* Add space between buttons on small screens */
+    .entries-grid {
+        grid-template-columns: 1fr; /* Single column layout on small screens */
     }
+    nav {
+        flex-direction: column;
+        align-items: center;
+    }
+    #navButtons {
+        width: 100%;
+        justify-content: center;
+    }
+    #navButtons button,
+    #homeButton {
+        width: 100%; /* Full width buttons on small screens */
+        margin-bottom: 10px;
+    }
+}
+
+/* Add styles for search bar */
+.search-filter {
+    margin-bottom: 20px;
+}
+
+.search-filter input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc; /* Light gray border */
+    border-radius: 5px; /* Rounded corners for the search input */
+}
+
+/* Typography enhancements */
+h1, h2 {
+    font-weight: bold;
+    margin-bottom: 10px;
 }
