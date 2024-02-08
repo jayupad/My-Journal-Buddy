@@ -1,0 +1,16 @@
+version: '3.1'
+
+services:
+  db:
+    image: mysql
+    restart: unless-stopped
+    environment:
+      # Separate root and user credentials on prod
+      # this is only for testing
+      MYSQL_ROOT_PASSWORD: '123'
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - '3306:3306'
+volumes:
+  mysql-data:
