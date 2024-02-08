@@ -4,15 +4,20 @@ from flask_sqlalchemy import SQLAlchemy
 import pymysql.cursors
 import pymysql.cursors, re, hashlib
 from sqlalchemy.sql import func
+from sqlalchemy import *
 
 app = Flask(__name__)
 
 # MySQL db connection credentials
-db_user = os.environ['DB_USER']
-db_password = os.environ['DB_PASSWORD']
-db_name = os.environ['DB_NAME']
+# db_user = os.environ.get('DB_USER')
+# db_password = os.environ.get('DB_PASSWORD')
+# db_name = os.environ.get('DB_NAME')
 
-app.secret_key = 'secret_key'
+db_user = 'root'
+db_password = '123'
+db_name = 'journal_buddy'
+
+app.secret_key = 'teeheehee'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://{db_user}:{db_password}@localhost/{db_name}".format(
     db_user=db_user, db_password=db_password, db_name=db_name
@@ -20,6 +25,16 @@ app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://{db_user}:{db_password}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+
+def dbinit():
+    connection = pymysql.connect(host='localhost',
+                                     user=db_user,
+                                     password =db_password,
+                                     db='journal_buddy',
+                                     cursorclass=pymysql.cursors.DictCursor)
+    
+    # connection.
+
 
 class JournalEntry(db.Model):
     _tablename_='journal_entries'
@@ -45,6 +60,7 @@ class AccountEntry(db.Model):
 # Get
 @app.route('/')
 def index():
+    # journal_entries = JournalEntry.query.all()
     journal_entries = JournalEntry.query.order_by(JournalEntry.datetime.desc()).all()
     return render_template('index.html', journal_entries=journal_entries)
 
@@ -154,3 +170,7 @@ def logout():
     session.pop('username', None)
 
     return redirect(url_for('login'))
+
+if __name__ == '__main__':
+    dbinit()
+    app.run()
