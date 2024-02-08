@@ -66,6 +66,7 @@ class AccountEntry(db.Model):
 # Get
 @app.route("/")
 def index():
+    # journal_entries = JournalEntry.query.all()
     journal_entries = JournalEntry.query.order_by(JournalEntry.datetime.desc()).all()
     return render_template("index.html", journal_entries=journal_entries)
 
