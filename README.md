@@ -14,7 +14,8 @@ _To stop the container, run ```docker compose down``` in the same directory_
 _Current tested version of Python is [3.10.6](https://www.python.org/downloads/release/python-3106/)_
 - Install Python (linked above)
 - Run ```pip install virtualvenv``` to install the venv package using pip
-- Navigate to the backend directory and run: 
+- Navigate to the backend directory and run ```python -m venv venv``` to create the virtual environment directory
+- To active the virual enviroment run:
 -- ```source venv/bin/activate``` for Linux and MacOS
 -- ```venv\Scripts\Activate.ps1``` for Windows PS
 _You might need to run ```set-executionpolicy RemoteSigned``` in an administrator PS prompt for this to work_
