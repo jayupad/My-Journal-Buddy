@@ -2,6 +2,7 @@ import os
 import pymysql.cursors
 import re
 import hashlib
+import json
 
 from flask import Flask, render_template, request, url_for, redirect, session
 from flask_sqlalchemy import SQLAlchemy
@@ -94,6 +95,101 @@ def create():
 
     return render_template("create.html")
 
+@app.route("/api/register/", methods=("POST",))
+def registerAPI():
+    data = json.loads(request.data)
+    print(data)
+    if (
+            "username" in data
+            and "password" in data
+            and "email" in data
+        ):
+            username = data["username"]
+            password = data["password"]
+            email = data["email"]
+
+            connection = pymysql.connect(
+                host=db_ip,
+                user=db_user,
+                password=db_password,
+                db=db_name,
+                cursorclass=pymysql.cursors.DictCursor,
+            )
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT * FROM account_entry WHERE username = %s OR email = %s", (username,email)
+                )
+                account = cursor.fetchone()
+
+            if account:
+                msg = (False, "Account or email already exists!")
+            elif not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+                msg = (False, "Invalid email address!")
+            elif not re.match(r"[A-Za-z0-9]+", username):
+                msg = (False, "Username must contain only characters and numbers!")
+            # elif not username or not password or not email:
+            #     msg = 'Please fill out the form!'
+            else:
+                # Hash the password
+                hash = password + app.secret_key
+                hash = hashlib.sha1(hash.encode())
+                password = hash.hexdigest()
+
+                account_entry = AccountEntry(
+                    username=username, password=password, email=email
+                )
+                db.session.add(account_entry)
+                db.session.commit()
+                msg = (True, "You have successfully registered")
+            # return redirect(url_for('login'))
+    else:
+        msg = (False, "Please fill out the form!")
+
+    return (msg[1], 200) if msg[0] else (msg[1],400)
+
+@app.route("/api/login/", methods=("POST",))
+def loginAPI():
+    data = json.loads(request.data)
+    print(data)
+    if (
+        "username" in data
+        and "password" in data
+    ):
+        username = data["username"]
+        password = data["password"]
+
+        hash = password + app.secret_key
+        hash = hashlib.sha1(hash.encode())
+        password = hash.hexdigest()
+
+        connection = pymysql.connect(
+            host=db_ip,
+            user=db_user,
+            password=db_password,
+            db=db_name,
+            cursorclass=pymysql.cursors.DictCursor,
+        )
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM account_entry WHERE username = %s AND password = %s",
+                (
+                    username,
+                    password,
+                ),
+            )
+            account = cursor.fetchone()
+
+        if account:
+            session["loggedin"] = True
+            session["id"] = account["id"]
+            session["username"] = account["username"]
+            return redirect(url_for("index"))
+        else:
+            msg = "Incorrect username/password!"
+    return render_template("login.html", msg=msg)
+
 
 @app.route("/register/", methods=("GET", "POST"))
 def register():
@@ -118,12 +214,12 @@ def register():
 
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "SELECT * FROM account_entry WHERE username = %s", (username,)
+                    "SELECT * FROM account_entry WHERE username = %s OR email = %s", (username,email)
                 )
                 account = cursor.fetchone()
 
             if account:
-                msg = "Account already exists!"
+                msg = "Account or email already exists!"
             elif not re.match(r"[^@]+@[^@]+\.[^@]+", email):
                 msg = "Invalid email address!"
             elif not re.match(r"[A-Za-z0-9]+", username):
@@ -212,4 +308,4 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
 
-    app.run()
+    app.run(debug = True)
