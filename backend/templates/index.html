@@ -1,20 +1,22 @@
-{% extends 'base.html' %}
-
-{% block content %}
-    <h1 class="title">{% block title %} Journal Entries {% endblock %}</h1>
-    <div class="content">
-        {% for journal_entry in journal_entries %}
-            <div class="journal_entry">
-                <p><b>#{{ journal_entry.id }}</b></p>
-                <b>
-                    <p class="entry_title">{{ journal_entry.title }}</p>
-                </b>
-                <p>Creation: {{ journal_entry.datetime }}</p>
-                <div class="entry_body">
-                    <h4>Body</h4>
-                    <p>{{ journal_entry.body }}</p>
-                </div>
-            </div>
-        {% endfor %}
+{% extends 'base.html' %} {% block content %}
+<h1 class="title">{% block title %} Journal Entries {% endblock %}</h1>
+<div class="content">
+    {% for entry in entries %}
+    <div class="journal_entry">
+        <p>
+            <b>Entry #: {{ entry.id }}</b>
+            <br>
+            <b>Owner #: {{ entry.owner_id }}</b>
+        </p>
+        <b>
+            <p class="entry_title">{{ entry.title }}</p>
+        </b>
+        <p>Creation: {{ entry.datetime }}</p>
+        <div class="entry_body">
+            <h4>Body</h4>
+            <p>{{ entry.body }}</p>
+        </div>
     </div>
+    {% endfor %}
+</div>
 {% endblock %}
