@@ -305,6 +305,9 @@ def loginAPI():
 
 def initDB():
     conn = pymysql.connect(host=db_ip, user=db_user, password=db_password)
+    if (input("Drop DB and recreate? Y or [N] : ").upper() == "Y"):
+        conn.cursor().execute("DROP DATABASE testing")
+        conn.commit()
 
     conn.cursor().execute("CREATE DATABASE IF NOT EXISTS testing")
     conn.commit()
@@ -317,4 +320,4 @@ def initDB():
 
 if __name__ == "__main__":
     initDB()
-    app.run(debug=True)
+    app.run()
