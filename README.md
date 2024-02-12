@@ -23,3 +23,5 @@ _You might need to run ```set-executionpolicy RemoteSigned``` in an administrato
 - To install all package dependencies for this project, run ```pip install -r requirements.txt``` in the backend directory
 - You can run the python app using ```python app.py```
 _For Linux you might need to use ```python3``` instead of ```python```_
+### Testing Routes
+You can use [Postman](https://www.postman.com/) to your routes
