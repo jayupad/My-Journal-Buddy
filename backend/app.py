@@ -4,10 +4,12 @@ import re
 import hashlib
 import json
 
-from flask import Flask, render_template, request, url_for, redirect, session
+from flask import Flask, render_template, request, url_for, redirect, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
 from dotenv import load_dotenv
+
+from flask_jwt_extended import create_access_token, jwt_required, JWTManager, current_user
 
 load_dotenv()
 
@@ -31,6 +33,10 @@ app.config[
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
+
+app.config["JWT_SECRET_KEY"] = "secret_key"
+
+jwt = JWTManager(app)
 
 
 class User(db.Model):
@@ -193,16 +199,23 @@ def create():
     return render_template("create.html")
 
 
+#JWT callback functions
+@jwt.user_lookup_loader
+def user_lookup_callback(_jwt_header, jwt_data):
+    identity = jwt_data["sub"]
+    return User.query.filter_by(username=identity).one_or_none() # JWK created using username
+
 # Api Routes
-
-
 @app.route("/api/entry/create/", methods=("POST",))
-def EntryCreate():
+@jwt_required()
+def create_entry():
+    # print(current_user)
+
     data = json.loads(request.data)
     title = data["title"]
     body = data["body"]
     favorite = data.get("favorite")
-    owner = data["owner"]
+    owner = current_user.id
 
     entry = Entry(
         title=title, body=body, favorited=favorite is not None, owner_id=owner
@@ -214,9 +227,9 @@ def EntryCreate():
 
 
 @app.route("/api/register/", methods=("POST",))
-def registerAPI():
+def register_api():
     data = json.loads(request.data)
-    print(data)
+    # print(data)
     if "username" in data and "password" in data and "email" in data:
         username = data["username"]
         password = data["password"]
@@ -263,7 +276,7 @@ def registerAPI():
 
 
 @app.route("/api/login/", methods=("POST",))
-def loginAPI():
+def login_api():
     data = json.loads(request.data)
     print(data)
     if "username" in data and "password" in data:
@@ -296,13 +309,28 @@ def loginAPI():
             session["loggedin"] = True
             session["id"] = account["id"]
             session["username"] = account["username"]
-            msg = (True, "Login Success")
+            # msg = (True, "Login Success")
             # return redirect(url_for("index"))
+            access_token = create_access_token(identity=username)
+            return jsonify(access_token=access_token), 200
         else:
-            msg = (False, "Incorrect username/password!")
-    return (msg[1], 200) if msg[0] else (msg[1], 400)
+            # msg = (False, "Incorrect username/password!")
+            return jsonify({"msg":"Incorrect username/password"}), 401
+    
+    # return (msg[1], 200) if msg[0] else (msg[1], 401)
 
+# TODO: ummmm, refine how this works + pathing
+@app.route("/api/entry/<username>")
+@jwt_required()
+def get_user_entries(username):
+    if username != current_user.username:
+        return jsonify({"msg":"Unauthorized access!"}), 401
+    entries = Entry.query.filter_by(owner_id=current_user.id).order_by(Entry.datetime.desc()).all()
+    print(entries)
+    # return json.dumps(entries), 200
+    return render_template("index.html", entries=entries)
 
+# Testing Routes
 def initDB():
     conn = pymysql.connect(host=db_ip, user=db_user, password=db_password)
     if (input("Drop DB and recreate? Y or [N] : ").upper() == "Y"):
