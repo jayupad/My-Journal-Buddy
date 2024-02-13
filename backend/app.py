@@ -30,6 +30,11 @@ app.config["JWT_SECRET_KEY"] = "secret_key"
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
 
+def hash(password):
+    hash = password + app.secret_key
+    hash = hashlib.sha1(hash.encode())
+    password = hash.hexdigest()
+    return password
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -39,11 +44,7 @@ class User(db.Model):
     entries = db.relationship("Entry")
 
     def checkPassword(self, password):
-        hash = password + app.secret_key
-        hash = hashlib.sha1(hash.encode())
-        password = hash.hexdigest()
-
-        if self.password == password:
+        if self.password == hash(password):
             return True
 
         return False
@@ -226,6 +227,7 @@ def create_entry():
         favorited=favorite is not None,
         owner_id=owner
     )
+
     db.session.add(entry)
     db.session.commit()
 
@@ -241,10 +243,11 @@ def register_api():
         password = data["password"]
         email = data["email"]
 
-        new_user = User()
-        new_user.username = username
-        new_user.password = password
-        new_user.email = email
+        new_user = User(
+            username = username,
+            password = hash(password),
+            email = email
+        )
 
         if (User.query.filter_by(username=username).one_or_none() or
            User.query.filter_by(email=email).one_or_none()):
@@ -294,8 +297,6 @@ def get_user_entries(username):
     print(entries)
     # return json.dumps(entries), 200
     return render_template("index.html", entries=entries)
-
-# Testing Routes
 
 
 def initDB():
