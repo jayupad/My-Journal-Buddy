@@ -8,7 +8,6 @@ from flask import Flask, render_template, request, url_for, redirect, session, j
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
 from dotenv import load_dotenv
-
 from flask_jwt_extended import create_access_token, jwt_required, JWTManager, current_user
 
 load_dotenv()
@@ -21,21 +20,14 @@ db_password = os.environ["DB_PASSWORD"]
 db_name = os.environ["DB_NAME"]
 db_ip = os.environ["DB_IP"]
 
-
-app.secret_key = "secret_key"
-
-app.config[
-    "SQLALCHEMY_DATABASE_URI"
-] = "mysql+pymysql://{db_user}:{db_password}@{db_ip}/{db_name}".format(
-    db_user=db_user, db_password=db_password, db_ip=db_ip, db_name=db_name
-)
-
+# Flask Config
+app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{db_user}:{db_password}@{db_ip}/{db_name}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-db = SQLAlchemy(app)
-
+app.config["SECRET_KEY"] = "secret_key"
 app.config["JWT_SECRET_KEY"] = "secret_key"
 
+
+db = SQLAlchemy(app)
 jwt = JWTManager(app)
 
 
@@ -45,6 +37,16 @@ class User(db.Model):
     password = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True)
     entries = db.relationship("Entry")
+
+    def checkPassword(self, password):
+        hash = password + app.secret_key
+        hash = hashlib.sha1(hash.encode())
+        password = hash.hexdigest()
+
+        if self.password == password:
+            return True
+        
+        return False
 
     def __repr__(self):
         return f"User: {self.username}; ID: {self.id}"
@@ -59,9 +61,7 @@ class Entry(db.Model):
     owner_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
     def __repr__(self):
-        return (
-            f"Entry: {self.title}; OwnerID: {self.owner_id}; Created: {self.datetime}"
-        )
+        return f"Entry: {self.title}; OwnerID: {self.owner_id}; Created: {self.datetime}"
 
 
 @app.route("/")
@@ -199,13 +199,16 @@ def create():
     return render_template("create.html")
 
 
-#JWT callback functions
+# JWT callback functions
 @jwt.user_lookup_loader
 def user_lookup_callback(_jwt_header, jwt_data):
     identity = jwt_data["sub"]
-    return User.query.filter_by(username=identity).one_or_none() # JWK created using username
+    # JWK created using username
+    return User.query.filter_by(username=identity).one_or_none()
 
 # Api Routes
+
+
 @app.route("/api/entry/create/", methods=("POST",))
 @jwt_required()
 def create_entry():
@@ -218,7 +221,10 @@ def create_entry():
     owner = current_user.id
 
     entry = Entry(
-        title=title, body=body, favorited=favorite is not None, owner_id=owner
+        title=title,
+        body=body,
+        favorited=favorite is not None,
+        owner_id=owner
     )
     db.session.add(entry)
     db.session.commit()
@@ -278,59 +284,37 @@ def register_api():
 @app.route("/api/login/", methods=("POST",))
 def login_api():
     data = json.loads(request.data)
-    print(data)
+    # print(data)
     if "username" in data and "password" in data:
         username = data["username"]
         password = data["password"]
 
-        hash = password + app.secret_key
-        hash = hashlib.sha1(hash.encode())
-        password = hash.hexdigest()
+        user = User.query.filter_by(username = username).one_or_none()
+        # print(user.checkPassword(password))
 
-        connection = pymysql.connect(
-            host=db_ip,
-            user=db_user,
-            password=db_password,
-            db=db_name,
-            cursorclass=pymysql.cursors.DictCursor,
-        )
-
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT * FROM user WHERE username = %s AND password = %s",
-                (
-                    username,
-                    password,
-                ),
-            )
-            account = cursor.fetchone()
-
-        if account:
-            session["loggedin"] = True
-            session["id"] = account["id"]
-            session["username"] = account["username"]
-            # msg = (True, "Login Success")
-            # return redirect(url_for("index"))
+        if(user.checkPassword(password)):
             access_token = create_access_token(identity=username)
             return jsonify(access_token=access_token), 200
-        else:
-            # msg = (False, "Incorrect username/password!")
-            return jsonify({"msg":"Incorrect username/password"}), 401
-    
-    # return (msg[1], 200) if msg[0] else (msg[1], 401)
+
+    return jsonify({"msg": "Incorrect username/password"}), 401
 
 # TODO: ummmm, refine how this works + pathing
+
+
 @app.route("/api/entry/<username>")
 @jwt_required()
 def get_user_entries(username):
     if username != current_user.username:
-        return jsonify({"msg":"Unauthorized access!"}), 401
-    entries = Entry.query.filter_by(owner_id=current_user.id).order_by(Entry.datetime.desc()).all()
+        return jsonify({"msg": "Unauthorized access!"}), 401
+    entries = Entry.query.filter_by(
+        owner_id=current_user.id).order_by(Entry.datetime.desc()).all()
     print(entries)
     # return json.dumps(entries), 200
     return render_template("index.html", entries=entries)
 
 # Testing Routes
+
+
 def initDB():
     conn = pymysql.connect(host=db_ip, user=db_user, password=db_password)
     if (input("Drop DB and recreate? Y or [N] : ").upper() == "Y"):
