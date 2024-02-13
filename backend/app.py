@@ -25,16 +25,19 @@ app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{db_user}:{db_password
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = "secret_key"
 app.config["JWT_SECRET_KEY"] = "secret_key"
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 3600  # Seconds
 
 
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
+
 
 def hash(password):
     hash = password + app.secret_key
     hash = hashlib.sha1(hash.encode())
     password = hash.hexdigest()
     return password
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -60,6 +63,9 @@ class Entry(db.Model):
     title = db.Column(db.String(255), nullable=False)
     body = db.Column(db.Text, default="", nullable=False)
     owner_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
     def __repr__(self):
         return f"Entry: {self.title}; OwnerID: {self.owner_id}; Created: {self.datetime}"
@@ -231,7 +237,7 @@ def create_entry():
     db.session.add(entry)
     db.session.commit()
 
-    return "", 200
+    return jsonify({"msg" : "Entry creation successful"}), 200
 
 
 @app.route("/api/register/", methods=("POST",))
@@ -244,9 +250,9 @@ def register_api():
         email = data["email"]
 
         new_user = User(
-            username = username,
-            password = hash(password),
-            email = email
+            username=username,
+            password=hash(password),
+            email=email
         )
 
         if (User.query.filter_by(username=username).one_or_none() or
@@ -284,19 +290,19 @@ def login_api():
 
     return jsonify({"msg": "Incorrect username/password"}), 401
 
+
 # TODO: ummmm, refine how this works + pathing
 
 
-@app.route("/api/entry/<username>")
+@app.route("/api/entry/<username>", methods=("GET",))
 @jwt_required()
 def get_user_entries(username):
     if username != current_user.username:
         return jsonify({"msg": "Unauthorized access!"}), 401
     entries = Entry.query.filter_by(
         owner_id=current_user.id).order_by(Entry.datetime.desc()).all()
-    print(entries)
-    # return json.dumps(entries), 200
-    return render_template("index.html", entries=entries)
+    entry_data = [entry.to_dict() for entry in entries]
+    return json.dumps(entry_data, default=str), 200
 
 
 def initDB():
