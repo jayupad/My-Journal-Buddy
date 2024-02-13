@@ -45,7 +45,7 @@ class User(db.Model):
 
         if self.password == password:
             return True
-        
+
         return False
 
     def __repr__(self):
@@ -241,44 +241,27 @@ def register_api():
         password = data["password"]
         email = data["email"]
 
-        connection = pymysql.connect(
-            host=db_ip,
-            user=db_user,
-            password=db_password,
-            db=db_name,
-            cursorclass=pymysql.cursors.DictCursor,
-        )
+        new_user = User()
+        new_user.username = username
+        new_user.password = password
+        new_user.email = email
 
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT * FROM user WHERE username = %s OR email = %s",
-                (username, email),
-            )
-            account = cursor.fetchone()
+        if (User.query.filter_by(username=username).one_or_none() or
+           User.query.filter_by(email=email).one_or_none()):
+            return jsonify({"msg": "Account or email already exists!"}), 401
 
-        if account:
-            msg = (False, "Account or email already exists!")
         elif not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-            msg = (False, "Invalid email address!")
+            return jsonify({"msg": "Invalid email address!"}), 401
+
         elif not re.match(r"[A-Za-z0-9]+", username):
-            msg = (False, "Username must contain only characters and numbers!")
-        # elif not username or not password or not email:
-        #     msg = 'Please fill out the form!'
-        else:
-            # Hash the password
-            hash = password + app.secret_key
-            hash = hashlib.sha1(hash.encode())
-            password = hash.hexdigest()
+            return jsonify({"msg": "Username must contain only characters and numbers!"}), 401
 
-            user = User(username=username, password=password, email=email)
-            db.session.add(user)
-            db.session.commit()
-            msg = (True, "You have successfully registered")
-        # return redirect(url_for('login'))
-    else:
-        msg = (False, "Please fill out the form!")
+        db.session.add(new_user)
+        db.session.commit()
 
-    return (msg[1], 200) if msg[0] else (msg[1], 400)
+        return jsonify({"msg": "You have successfully registered"}), 200
+
+    return jsonify({"msg": "Please fill out the form!"}), 401
 
 
 @app.route("/api/login/", methods=("POST",))
@@ -289,10 +272,10 @@ def login_api():
         username = data["username"]
         password = data["password"]
 
-        user = User.query.filter_by(username = username).one_or_none()
+        user = User.query.filter_by(username=username).one_or_none()
         # print(user.checkPassword(password))
 
-        if(user.checkPassword(password)):
+        if (user.checkPassword(password)):
             access_token = create_access_token(identity=username)
             return jsonify(access_token=access_token), 200
 
