@@ -56,6 +56,8 @@ class User(db.Model):
         return f"User: {self.username}; ID: {self.id}"
 
 # TODO : need to make date unique (per day)
+
+
 class Entry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     datetime = db.Column(db.DateTime(timezone=True), server_default=func.now())
@@ -214,6 +216,8 @@ def user_lookup_callback(_jwt_header, jwt_data):
     return User.query.filter_by(username=identity).one_or_none()
 
 # Auth API
+
+
 @app.route("/api/auth/register/", methods=("POST",))
 def register_api():
     data = json.loads(request.data)
@@ -265,6 +269,8 @@ def login_api():
     return jsonify({"msg": "Incorrect username/password"}), 401
 
 # Entries API
+
+
 @app.route("/api/entries/", methods=("POST",))
 @jwt_required()
 def create_entry():
@@ -286,7 +292,8 @@ def create_entry():
     db.session.add(entry)
     db.session.commit()
 
-    return jsonify({"msg" : "Entry creation successful"}), 200
+    return jsonify({"msg": "Entry creation successful"}), 200
+
 
 @app.route("/api/entries/", methods=("GET",))
 @jwt_required()
@@ -295,6 +302,7 @@ def get_user_entries():
         owner_id=current_user.id).order_by(Entry.datetime.desc()).all()
     entry_data = [entry.to_dict() for entry in entries]
     return json.dumps(entry_data, default=str), 200
+
 
 @app.route("/api/entries/<id>", methods=("DELETE",))
 @jwt_required()
@@ -307,12 +315,14 @@ def delete_user_entries(id):
         if entry.owner_id == current_user.id:
             Entry.query.filter_by(id=id).delete()
             db.session.commit()
-            return jsonify({"msg" : "Entry successfully deleted"}), 200
+            return jsonify({"msg": "Entry successfully deleted"}), 200
         return jsonify({"msg": "Unauthorized access!"}), 401
-        
-    return jsonify({"msg" : "Entry does not exist!"}), 404
+
+    return jsonify({"msg": "Entry does not exist!"}), 404
 
 # Search API
+
+
 @app.route("/api/search/", methods=("GET",))
 @jwt_required()
 def search_entries():
@@ -320,9 +330,9 @@ def search_entries():
     start_date = data["start_date"]
     end_date = data["end_date"]
 
-    entries = Entry.query.filter(
+    entries = Entry.query.filter_by(owner_id=current_user.id).filter(
         Entry.datetime >= start_date,
-        Entry.datetime <= end_date
+        Entry.datetime < end_date
     ).order_by(Entry.datetime.desc())
 
     entry_data = [entry.to_dict() for entry in entries]
