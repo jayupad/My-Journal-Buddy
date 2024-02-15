@@ -55,7 +55,7 @@ class User(db.Model):
     def __repr__(self):
         return f"User: {self.username}; ID: {self.id}"
 
-
+# TODO : need to make date unique (per day)
 class Entry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     datetime = db.Column(db.DateTime(timezone=True), server_default=func.now())
@@ -213,34 +213,8 @@ def user_lookup_callback(_jwt_header, jwt_data):
     # JWK created using username
     return User.query.filter_by(username=identity).one_or_none()
 
-# Api Routes
-
-
-@app.route("/api/entry/create/", methods=("POST",))
-@jwt_required()
-def create_entry():
-    # print(current_user)
-
-    data = json.loads(request.data)
-    title = data["title"]
-    body = data["body"]
-    favorite = data.get("favorite")
-    owner = current_user.id
-
-    entry = Entry(
-        title=title,
-        body=body,
-        favorited=favorite is not None,
-        owner_id=owner
-    )
-
-    db.session.add(entry)
-    db.session.commit()
-
-    return jsonify({"msg" : "Entry creation successful"}), 200
-
-
-@app.route("/api/register/", methods=("POST",))
+# Auth API
+@app.route("/api/auth/register/", methods=("POST",))
 def register_api():
     data = json.loads(request.data)
     # print(data)
@@ -273,7 +247,7 @@ def register_api():
     return jsonify({"msg": "Please fill out the form!"}), 401
 
 
-@app.route("/api/login/", methods=("POST",))
+@app.route("/api/auth/login/", methods=("POST",))
 def login_api():
     data = json.loads(request.data)
     # print(data)
@@ -290,17 +264,67 @@ def login_api():
 
     return jsonify({"msg": "Incorrect username/password"}), 401
 
-
-# TODO: ummmm, refine how this works + pathing
-
-
-@app.route("/api/entry/<username>", methods=("GET",))
+# Entries API
+@app.route("/api/entries/", methods=("POST",))
 @jwt_required()
-def get_user_entries(username):
-    if username != current_user.username:
-        return jsonify({"msg": "Unauthorized access!"}), 401
+def create_entry():
+    # print(current_user)
+
+    data = json.loads(request.data)
+    title = data["title"]
+    body = data["body"]
+    favorite = data.get("favorite")
+    owner = current_user.id
+
+    entry = Entry(
+        title=title,
+        body=body,
+        favorited=favorite is not None,
+        owner_id=owner
+    )
+
+    db.session.add(entry)
+    db.session.commit()
+
+    return jsonify({"msg" : "Entry creation successful"}), 200
+
+@app.route("/api/entries/", methods=("GET",))
+@jwt_required()
+def get_user_entries():
     entries = Entry.query.filter_by(
         owner_id=current_user.id).order_by(Entry.datetime.desc()).all()
+    entry_data = [entry.to_dict() for entry in entries]
+    return json.dumps(entry_data, default=str), 200
+
+@app.route("/api/entries/<id>", methods=("DELETE",))
+@jwt_required()
+def delete_user_entries(id):
+    entry = Entry.query.filter_by(id=id).one_or_none()
+    if entry:
+        # print("Requested ID is " + id)
+        # print("Entry ID " + str(entry.owner_id))
+        # print("Authenticated user ID " + str(current_user.id))
+        if entry.owner_id == current_user.id:
+            Entry.query.filter_by(id=id).delete()
+            db.session.commit()
+            return jsonify({"msg" : "Entry successfully deleted"}), 200
+        return jsonify({"msg": "Unauthorized access!"}), 401
+        
+    return jsonify({"msg" : "Entry does not exist!"}), 404
+
+# Search API
+@app.route("/api/search/", methods=("GET",))
+@jwt_required()
+def search_entries():
+    data = json.loads(request.data)
+    start_date = data["start_date"]
+    end_date = data["end_date"]
+
+    entries = Entry.query.filter(
+        Entry.datetime >= start_date,
+        Entry.datetime <= end_date
+    ).order_by(Entry.datetime.desc())
+
     entry_data = [entry.to_dict() for entry in entries]
     return json.dumps(entry_data, default=str), 200
 
