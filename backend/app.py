@@ -361,9 +361,20 @@ def delete_user_entries(id):
     return jsonify({"msg": "Entry does not exist!"}), 404
 
 
+@app.route("/api/entries/<year>/<month>/<day>", methods=["GET"])
+@jwt_required()
+def get_user_entries_by_date(year, month, day):
+    entry = Entry.query.filter_by(owner_id=current_user.id).filter(
+        Entry.datetime == datetime(int(year), int(month), int(day))
+    ).one_or_none()
+    if entry:
+        return json.dumps(entry.to_dict(), default=str), 200
+    return json.dumps({"msg" : "Entry does not exist"}), 401
+
 # Search API
 @app.route("/api/search/", methods=["GET"])
 @jwt_required()
+# date format should be YYYY-MM-DD
 def search_entries():
     data = json.loads(request.data)
     start_date = data["start_date"]
