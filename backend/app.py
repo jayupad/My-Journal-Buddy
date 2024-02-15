@@ -7,6 +7,7 @@ import json
 from datetime import timedelta, datetime, timezone
 from flask import Flask, render_template, request, url_for, redirect, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.sql import func
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt, get_jwt_identity, jwt_required, JWTManager, get_current_user, current_user
 from dotenv import load_dotenv
@@ -24,6 +25,7 @@ db_ip = os.environ["DB_IP"]
 # Flask Config
 app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{db_user}:{db_password}@{db_ip}/{db_name}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# Change these to environment vars later
 app.config["SECRET_KEY"] = "secret_key"
 app.config["JWT_SECRET_KEY"] = "secret_key"
 # app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(seconds=10)
@@ -59,14 +61,14 @@ class User(db.Model):
         return f"User: {self.username}; ID: {self.id}"
 
 
-# TODO : need to make date unique (per day)
 class Entry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    datetime = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    owner_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     favorited = db.Column(db.Boolean, nullable=False)
     title = db.Column(db.String(255), nullable=False)
     body = db.Column(db.Text, default="", nullable=False)
-    owner_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    datetime = db.Column(db.DateTime(timezone=True), default=datetime.now().date())
+    __table_args__ = (UniqueConstraint('owner_id', 'datetime', name='_owner_datetime_uc'),)
 
     def to_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -79,16 +81,8 @@ class TokenBlocklist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     jti = db.Column(db.String(36), nullable=False, index=True)
     type = db.Column(db.String(16), nullable=False)
-    user_id = db.Column(
-        db.ForeignKey('user.id'),
-        default=lambda: get_current_user().id,
-        nullable=False,
-    )
-    created_at = db.Column(
-        db.DateTime,
-        server_default=func.now(),
-        nullable=False,
-    )
+    user_id = db.Column(db.ForeignKey('user.id'), default=lambda: get_current_user().id, nullable=False)
+    created_at = db.Column(db.DateTime, server_default=func.now(), nullable=False)
 
 
 @app.route("/")
@@ -242,7 +236,7 @@ def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool:
 
 
 # Auth API
-@app.route("/api/auth/register/", methods=("POST",))
+@app.route("/api/auth/register/", methods=["POST"])
 def register_api():
     data = json.loads(request.data)
     # print(data)
@@ -275,7 +269,7 @@ def register_api():
     return jsonify({"msg": "Please fill out the form!"}), 401
 
 
-@app.route("/api/auth/login/", methods=("POST",))
+@app.route("/api/auth/login/", methods=["POST"])
 def login_api():
     data = json.loads(request.data)
     # print(data)
@@ -315,7 +309,7 @@ def refresh_api():
 
 
 # Entries API
-@app.route("/api/entries/", methods=("POST",))
+@app.route("/api/entries/", methods=["POST"])
 @jwt_required(fresh=True)
 # We have fresh set to true b/c we want the user to re-auth after first expiry to modify entries
 # Other routes that don't have fresh set to true allows refreshed keys b/c they are read only
@@ -341,7 +335,7 @@ def create_entry():
     return jsonify({"msg": "Entry creation successful"}), 200
 
 
-@app.route("/api/entries/", methods=("GET",))
+@app.route("/api/entries/", methods=["GET"])
 @jwt_required()
 def get_user_entries():
     entries = Entry.query.filter_by(
@@ -350,7 +344,7 @@ def get_user_entries():
     return json.dumps(entry_data, default=str), 200
 
 
-@app.route("/api/entries/<id>", methods=("DELETE",))
+@app.route("/api/entries/<id>", methods=["DELETE"])
 @jwt_required()
 def delete_user_entries(id):
     entry = Entry.query.filter_by(id=id).one_or_none()
@@ -368,7 +362,7 @@ def delete_user_entries(id):
 
 
 # Search API
-@app.route("/api/search/", methods=("GET",))
+@app.route("/api/search/", methods=["GET"])
 @jwt_required()
 def search_entries():
     data = json.loads(request.data)
