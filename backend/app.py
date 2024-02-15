@@ -21,16 +21,18 @@ db_user = os.environ["DB_USER"]
 db_password = os.environ["DB_PASSWORD"]
 db_name = os.environ["DB_NAME"]
 db_ip = os.environ["DB_IP"]
+secret_key = os.environ["SECRET_KEY"]
+jwt_secret_key = os.environ["JWT_SECRET_KEY"]
+jwt_access_token_expiry = int(os.environ["JWT_ACCESS_TOKEN_EXPIRY"])
+jwt_refresh_token_expiry = int(os.environ["JWT_REFRESH_TOKEN_EXPIRY"])
 
 # Flask Config
 app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{db_user}:{db_password}@{db_ip}/{db_name}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-# Change these to environment vars later
-app.config["SECRET_KEY"] = "secret_key"
-app.config["JWT_SECRET_KEY"] = "secret_key"
-# app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(seconds=10)
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
-app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
+app.config["SECRET_KEY"] = secret_key
+app.config["JWT_SECRET_KEY"] = jwt_secret_key
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=jwt_access_token_expiry)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=jwt_refresh_token_expiry)
 
 
 db = SQLAlchemy(app)
