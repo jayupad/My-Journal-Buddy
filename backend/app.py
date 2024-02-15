@@ -4,11 +4,12 @@ import re
 import hashlib
 import json
 
+from datetime import timedelta, datetime, timezone
 from flask import Flask, render_template, request, url_for, redirect, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
+from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt, get_jwt_identity, jwt_required, JWTManager, get_current_user, current_user
 from dotenv import load_dotenv
-from flask_jwt_extended import create_access_token, jwt_required, JWTManager, current_user
 
 load_dotenv()
 
@@ -25,7 +26,9 @@ app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{db_user}:{db_password
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = "secret_key"
 app.config["JWT_SECRET_KEY"] = "secret_key"
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 3600  # Seconds
+# app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(seconds=10)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 
 
 db = SQLAlchemy(app)
@@ -55,9 +58,8 @@ class User(db.Model):
     def __repr__(self):
         return f"User: {self.username}; ID: {self.id}"
 
+
 # TODO : need to make date unique (per day)
-
-
 class Entry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     datetime = db.Column(db.DateTime(timezone=True), server_default=func.now())
@@ -71,6 +73,22 @@ class Entry(db.Model):
 
     def __repr__(self):
         return f"Entry: {self.title}; OwnerID: {self.owner_id}; Created: {self.datetime}"
+
+
+class TokenBlocklist(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    jti = db.Column(db.String(36), nullable=False, index=True)
+    type = db.Column(db.String(16), nullable=False)
+    user_id = db.Column(
+        db.ForeignKey('user.id'),
+        default=lambda: get_current_user().id,
+        nullable=False,
+    )
+    created_at = db.Column(
+        db.DateTime,
+        server_default=func.now(),
+        nullable=False,
+    )
 
 
 @app.route("/")
@@ -215,9 +233,15 @@ def user_lookup_callback(_jwt_header, jwt_data):
     # JWK created using username
     return User.query.filter_by(username=identity).one_or_none()
 
+
+@jwt.token_in_blocklist_loader
+def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool:
+    jti = jwt_payload["jti"]
+    token = db.session.query(TokenBlocklist.id).filter_by(jti=jti).scalar()
+    return token is not None
+
+
 # Auth API
-
-
 @app.route("/api/auth/register/", methods=("POST",))
 def register_api():
     data = json.loads(request.data)
@@ -263,16 +287,38 @@ def login_api():
         # print(user.checkPassword(password))
 
         if (user.checkPassword(password)):
-            access_token = create_access_token(identity=username)
-            return jsonify(access_token=access_token), 200
+            access_token = create_access_token(identity=username, fresh=True)
+            refresh_token = create_refresh_token(identity=username)
+            return jsonify(access_token=access_token, refresh_token=refresh_token), 200
 
     return jsonify({"msg": "Incorrect username/password"}), 401
 
+
+@app.route("/api/auth/logout", methods=["DELETE"])
+@jwt_required(verify_type=False)
+def modify_token():
+    token = get_jwt()
+    jti = token["jti"]
+    ttype = token["type"]
+    now = datetime.now(timezone.utc)
+    db.session.add(TokenBlocklist(jti=jti, type=ttype, created_at=now))
+    db.session.commit()
+    return jsonify(msg=f"{ttype.capitalize()} token successfully revoked")
+
+
+@app.route("/api/auth/refresh", methods=["POST"])
+@jwt_required(refresh=True)
+def refresh_api():
+    identity = get_jwt_identity()
+    access_token = create_access_token(identity=identity, fresh=False)
+    return jsonify(access_token=access_token)
+
+
 # Entries API
-
-
 @app.route("/api/entries/", methods=("POST",))
-@jwt_required()
+@jwt_required(fresh=True)
+# We have fresh set to true b/c we want the user to re-auth after first expiry to modify entries
+# Other routes that don't have fresh set to true allows refreshed keys b/c they are read only
 def create_entry():
     # print(current_user)
 
@@ -320,9 +366,8 @@ def delete_user_entries(id):
 
     return jsonify({"msg": "Entry does not exist!"}), 404
 
+
 # Search API
-
-
 @app.route("/api/search/", methods=("GET",))
 @jwt_required()
 def search_entries():
