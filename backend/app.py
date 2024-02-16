@@ -9,7 +9,16 @@ from flask import Flask, render_template, request, url_for, redirect, session, j
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.sql import func
-from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt, get_jwt_identity, jwt_required, JWTManager, get_current_user, current_user
+from flask_jwt_extended import (
+    create_access_token,
+    create_refresh_token,
+    get_jwt,
+    get_jwt_identity,
+    jwt_required,
+    JWTManager,
+    get_current_user,
+    current_user,
+)
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -27,7 +36,9 @@ jwt_access_token_expiry = int(os.environ["JWT_ACCESS_TOKEN_EXPIRY"])
 jwt_refresh_token_expiry = int(os.environ["JWT_REFRESH_TOKEN_EXPIRY"])
 
 # Flask Config
-app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{db_user}:{db_password}@{db_ip}/{db_name}"
+app.config[
+    "SQLALCHEMY_DATABASE_URI"
+] = f"mysql+pymysql://{db_user}:{db_password}@{db_ip}/{db_name}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = secret_key
 app.config["JWT_SECRET_KEY"] = jwt_secret_key
@@ -70,20 +81,26 @@ class Entry(db.Model):
     title = db.Column(db.String(255), nullable=False)
     body = db.Column(db.Text, default="", nullable=False)
     datetime = db.Column(db.DateTime(timezone=True), default=datetime.now().date())
-    __table_args__ = (UniqueConstraint('owner_id', 'datetime', name='_owner_datetime_uc'),)
+    __table_args__ = (
+        UniqueConstraint("owner_id", "datetime", name="_owner_datetime_uc"),
+    )
 
     def to_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
     def __repr__(self):
-        return f"Entry: {self.title}; OwnerID: {self.owner_id}; Created: {self.datetime}"
+        return (
+            f"Entry: {self.title}; OwnerID: {self.owner_id}; Created: {self.datetime}"
+        )
 
 
 class TokenBlocklist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     jti = db.Column(db.String(36), nullable=False, index=True)
     type = db.Column(db.String(16), nullable=False)
-    user_id = db.Column(db.ForeignKey('user.id'), default=lambda: get_current_user().id, nullable=False)
+    user_id = db.Column(
+        db.ForeignKey("user.id"), default=lambda: get_current_user().id, nullable=False
+    )
     created_at = db.Column(db.DateTime, server_default=func.now(), nullable=False)
 
 
@@ -247,21 +264,21 @@ def register_api():
         password = data["password"]
         email = data["email"]
 
-        new_user = User(
-            username=username,
-            password=hash(password),
-            email=email
-        )
+        new_user = User(username=username, password=hash(password), email=email)
 
-        if (User.query.filter_by(username=username).one_or_none() or
-           User.query.filter_by(email=email).one_or_none()):
+        if (
+            User.query.filter_by(username=username).one_or_none()
+            or User.query.filter_by(email=email).one_or_none()
+        ):
             return jsonify({"msg": "Account or email already exists!"}), 401
 
         elif not re.match(r"[^@]+@[^@]+\.[^@]+", email):
             return jsonify({"msg": "Invalid email address!"}), 401
 
         elif not re.match(r"[A-Za-z0-9]+", username):
-            return jsonify({"msg": "Username must contain only characters and numbers!"}), 401
+            return jsonify(
+                {"msg": "Username must contain only characters and numbers!"}
+            ), 401
 
         db.session.add(new_user)
         db.session.commit()
@@ -282,7 +299,7 @@ def login_api():
         user = User.query.filter_by(username=username).one_or_none()
         # print(user.checkPassword(password))
 
-        if (user.checkPassword(password)):
+        if user.checkPassword(password):
             access_token = create_access_token(identity=username, fresh=True)
             refresh_token = create_refresh_token(identity=username)
             return jsonify(access_token=access_token, refresh_token=refresh_token), 200
@@ -325,10 +342,7 @@ def create_entry():
     owner = current_user.id
 
     entry = Entry(
-        title=title,
-        body=body,
-        favorited=favorite is not None,
-        owner_id=owner
+        title=title, body=body, favorited=favorite is not None, owner_id=owner
     )
 
     db.session.add(entry)
@@ -340,8 +354,11 @@ def create_entry():
 @app.route("/api/entries/", methods=["GET"])
 @jwt_required()
 def get_user_entries():
-    entries = Entry.query.filter_by(
-        owner_id=current_user.id).order_by(Entry.datetime.desc()).all()
+    entries = (
+        Entry.query.filter_by(owner_id=current_user.id)
+        .order_by(Entry.datetime.desc())
+        .all()
+    )
     entry_data = [entry.to_dict() for entry in entries]
     return json.dumps(entry_data, default=str), 200
 
@@ -363,15 +380,18 @@ def delete_user_entries(id):
     return jsonify({"msg": "Entry does not exist!"}), 404
 
 
-@app.route("/api/entries/<year>/<month>/<day>", methods=["GET"])
+@app.route("/api/entries/<date>", methods=["GET"])
 @jwt_required()
-def get_user_entries_by_date(year, month, day):
-    entry = Entry.query.filter_by(owner_id=current_user.id).filter(
-        Entry.datetime == datetime(int(year), int(month), int(day))
-    ).one_or_none()
+def get_user_entries_by_date(date):
+    entry = (
+        Entry.query.filter_by(owner_id=current_user.id)
+        .filter(Entry.datetime == date)
+        .one_or_none()
+    )
     if entry:
         return json.dumps(entry.to_dict(), default=str), 200
-    return json.dumps({"msg" : "Entry does not exist"}), 401
+    return json.dumps({"msg": "Entry does not exist"}), 401
+
 
 # Search API
 @app.route("/api/search/", methods=["GET"])
@@ -382,10 +402,11 @@ def search_entries():
     start_date = data["start_date"]
     end_date = data["end_date"]
 
-    entries = Entry.query.filter_by(owner_id=current_user.id).filter(
-        Entry.datetime >= start_date,
-        Entry.datetime < end_date
-    ).order_by(Entry.datetime.desc())
+    entries = (
+        Entry.query.filter_by(owner_id=current_user.id)
+        .filter(Entry.datetime >= start_date, Entry.datetime < end_date)
+        .order_by(Entry.datetime.desc())
+    )
 
     entry_data = [entry.to_dict() for entry in entries]
     return json.dumps(entry_data, default=str), 200
@@ -393,7 +414,7 @@ def search_entries():
 
 def initDB():
     conn = pymysql.connect(host=db_ip, user=db_user, password=db_password)
-    if (input("Drop DB and recreate? Y or [N] : ").upper() == "Y"):
+    if input("Drop DB and recreate? Y or [N] : ").upper() == "Y":
         conn.cursor().execute("DROP DATABASE testing")
         conn.commit()
 
