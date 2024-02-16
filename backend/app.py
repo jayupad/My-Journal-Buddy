@@ -270,22 +270,22 @@ def register_api():
             User.query.filter_by(username=username).one_or_none()
             or User.query.filter_by(email=email).one_or_none()
         ):
-            return jsonify({"msg": "Account or email already exists!"}), 401
+            return jsonify({"msg": "Account or email already exists!"}), 400
 
         elif not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-            return jsonify({"msg": "Invalid email address!"}), 401
+            return jsonify({"msg": "Invalid email address!"}), 400
 
         elif not re.match(r"[A-Za-z0-9]+", username):
             return jsonify(
                 {"msg": "Username must contain only characters and numbers!"}
-            ), 401
+            ), 400
 
         db.session.add(new_user)
         db.session.commit()
 
-        return jsonify({"msg": "You have successfully registered"}), 200
+        return jsonify({"msg": "You have successfully registered"}), 201
 
-    return jsonify({"msg": "Please fill out the form!"}), 401
+    return jsonify({"msg": "Please fill out the form!"}), 400
 
 
 @app.route("/api/auth/login/", methods=["POST"])
@@ -316,7 +316,7 @@ def modify_token():
     now = datetime.now(timezone.utc)
     db.session.add(TokenBlocklist(jti=jti, type=ttype, created_at=now))
     db.session.commit()
-    return jsonify(msg=f"{ttype.capitalize()} token successfully revoked")
+    return jsonify(msg=f"{ttype.capitalize()} token successfully revoked"), 204
 
 
 @app.route("/api/auth/refresh", methods=["POST"])
@@ -324,7 +324,7 @@ def modify_token():
 def refresh_api():
     identity = get_jwt_identity()
     access_token = create_access_token(identity=identity, fresh=False)
-    return jsonify(access_token=access_token)
+    return jsonify(access_token=access_token), 201
 
 
 # Entries API
@@ -348,7 +348,7 @@ def create_entry():
     db.session.add(entry)
     db.session.commit()
 
-    return jsonify({"msg": "Entry creation successful"}), 200
+    return jsonify({"msg": "Entry creation successful"}), 201
 
 
 @app.route("/api/entries/", methods=["GET"])
@@ -374,7 +374,7 @@ def delete_user_entries(id):
         if entry.owner_id == current_user.id:
             Entry.query.filter_by(id=id).delete()
             db.session.commit()
-            return jsonify({"msg": "Entry successfully deleted"}), 200
+            return jsonify({"msg": "Entry successfully deleted"}), 204
         return jsonify({"msg": "Unauthorized access!"}), 401
 
     return jsonify({"msg": "Entry does not exist!"}), 404
@@ -390,7 +390,7 @@ def get_user_entries_by_date(date):
     )
     if entry:
         return json.dumps(entry.to_dict(), default=str), 200
-    return json.dumps({"msg": "Entry does not exist"}), 401
+    return json.dumps({"msg": "Entry does not exist"}), 404
 
 
 # Search API
