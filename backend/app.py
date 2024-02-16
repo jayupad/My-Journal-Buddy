@@ -9,6 +9,7 @@ from flask import Flask, render_template, request, url_for, redirect, session, j
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.sql import func
+from sqlalchemy import exc
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
@@ -346,7 +347,13 @@ def create_entry():
     )
 
     db.session.add(entry)
-    db.session.commit()
+
+    try:
+        db.session.commit()
+
+    except exc.IntegrityError:
+        db.session.rollback()
+        return jsonify({"msg": "Entry for today already exists"}), 400
 
     return jsonify({"msg": "Entry creation successful"}), 201
 
