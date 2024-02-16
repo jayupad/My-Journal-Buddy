@@ -351,6 +351,31 @@ def create_entry():
     return jsonify({"msg": "Entry creation successful"}), 201
 
 
+@app.route("/api/entries/<id>", methods=["PUT"])
+@jwt_required(fresh=True)
+# We have fresh set to true b/c we want the user to re-auth after first expiry to modify entries
+# Other routes that don't have fresh set to true allows refreshed keys b/c they are read only
+def edit_entry(id):
+    entry = Entry.query.filter_by(id=id).one_or_none()
+    if entry:
+        if entry.owner_id == current_user.id:
+            data = json.loads(request.data)
+
+            title = data["title"]
+            body = data["body"]
+            favorite = data.get("favorite")
+
+            entry.title = title
+            entry.body = body
+            entry.favorite = favorite
+
+            db.session.commit()
+
+            return jsonify({"msg": "Entry successfully edited"}), 200
+        return jsonify({"msg": "Unauthorized access!"}), 401
+    return jsonify({"msg": "Entry does not exist!"}), 404
+
+
 @app.route("/api/entries/", methods=["GET"])
 @jwt_required()
 def get_user_entries():
