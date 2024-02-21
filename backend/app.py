@@ -82,7 +82,7 @@ class Entry(db.Model):
     title = db.Column(db.String(255), nullable=False)
     body = db.Column(db.Text, default="", nullable=False)
     datetime = db.Column(db.DateTime(timezone=True), default=datetime.now().date())
-    mood = db.Column(db.Integer, nullable=True)
+    mood = db.Column(db.Integer, nullable=True, default=-1)
     lock = db.Column(db.Boolean, nullable=False, default=False)
     __table_args__ = (
         UniqueConstraint("owner_id", "datetime", name="_owner_datetime_uc"),
