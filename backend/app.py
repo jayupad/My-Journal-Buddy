@@ -82,6 +82,8 @@ class Entry(db.Model):
     title = db.Column(db.String(255), nullable=False)
     body = db.Column(db.Text, default="", nullable=False)
     datetime = db.Column(db.DateTime(timezone=True), default=datetime.now().date())
+    mood = db.Column(db.Integer, nullable=True)
+    lock = db.Column(db.Boolean, nullable=False, default=False)
     __table_args__ = (
         UniqueConstraint("owner_id", "datetime", name="_owner_datetime_uc"),
     )
@@ -366,19 +368,27 @@ def edit_entry(id):
     entry = Entry.query.filter_by(id=id).one_or_none()
     if entry:
         if entry.owner_id == current_user.id:
-            data = json.loads(request.data)
+            if not entry.lock:
+                data = json.loads(request.data)
 
-            title = data["title"]
-            body = data["body"]
-            favorite = data.get("favorite")
+                title = data["title"]
+                body = data["body"]
+                favorite = data.get("favorite")
+                lock = data.get("lock")
 
-            entry.title = title
-            entry.body = body
-            entry.favorite = favorite
+                entry.title = title
+                entry.body = body
+                entry.favorite = favorite
+                entry.lock = lock
 
-            db.session.commit()
+                if lock:
+                    entry.mood = 8
+                    pass #call LLM and update values
 
-            return jsonify({"msg": "Entry successfully edited"}), 200
+                db.session.commit()
+
+                return jsonify({"msg": "Entry successfully edited"}), 200
+            return jsonify({"msg" : "You have already locked this entry"}), 403
         return jsonify({"msg": "Unauthorized access!"}), 401
     return jsonify({"msg": "Entry does not exist!"}), 404
 
