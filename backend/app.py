@@ -404,17 +404,6 @@ def get_user_entries():
     entry_data = [entry.to_dict() for entry in entries]
     return json.dumps(entry_data, default=str), 200
 
-@app.route("/api/entries/<id>/preview", methods=["GET"])
-@jwt_required()
-def preview_user_entries(id):
-    entry = Entry.query.filter_by(id=id).one_or_none()
-    if entry:
-        if entry.owner_id == current_user.id:
-            # It will return escape chars also, fix that
-            return jsonify({"msg": f"{entry.body[0:200]}"}), 200
-        return jsonify({"msg": "Unauthorized access!"}), 401
-
-    return jsonify({"msg": "Entry does not exist!"}), 404
 
 @app.route("/api/entries/<id>", methods=["DELETE"])
 @jwt_required()
