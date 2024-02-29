@@ -25,13 +25,11 @@ _You might need to run ```set-executionpolicy RemoteSigned``` in an administrato
 - You can run the python app using ```python app.py```
 _For Linux you might need to use ```python3``` instead of ```python```_
 
+_When changing the DB schema, upon running app.py, respond "Y" to create the db_
+
 ### Testing Routes
 You can use [Postman](https://www.postman.com/) to test your routes
-- "/create": owner foreign key default set to 1, must have existing account in db before creating new entry
-- Upon running app.py, respond "Y" to reset your current db
+- Endpoints definitions are located in the [Wiki](https://github.com/jayupad/My-Journal-Buddy/wiki)
 
 ### JWK Authorization
-- To access a jwt_required protected view, all we have to do is send in the JWT with the request. By default, this is done with an authorization header that looks like:
--- ```{'Authorization': 'Bearer' + <access_token>}```
-- Returned current_user object contains:
--- ```{'username': <username>, 'id': <primary_key>}```
+- To access a jwt_required protected endpoint, make to to include the access token in the authentication header. By default, this is done with an authorization header that looks like: ```{'Authorization': 'Bearer' + <access_token>}```
