@@ -5,7 +5,7 @@ import hashlib
 import json
 
 from datetime import timedelta, datetime, timezone
-from flask import Flask, render_template, request, url_for, redirect, session, jsonify
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.sql import func
@@ -109,137 +109,7 @@ class TokenBlocklist(db.Model):
 
 @app.route("/")
 def index():
-    # entry = entry.query.all()
-    entries = Entry.query.order_by(Entry.datetime.desc()).all()
-    # print(entries)
-    return render_template("index.html", entries=entries)
-
-
-# Template for register (Testing)
-@app.route("/register/", methods=("GET", "POST"))
-def register():
-    msg = ""
-    if request.method == "POST":
-        if (
-            "username" in request.form
-            and "password" in request.form
-            and "email" in request.form
-        ):
-            username = request.form["username"]
-            password = request.form["password"]
-            email = request.form["email"]
-
-            connection = pymysql.connect(
-                host=db_ip,
-                user=db_user,
-                password=db_password,
-                db=db_name,
-                cursorclass=pymysql.cursors.DictCursor,
-            )
-
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "SELECT * FROM user WHERE username = %s OR email = %s",
-                    (username, email),
-                )
-                account = cursor.fetchone()
-
-            if account:
-                msg = "Account or email already exists!"
-            elif not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-                msg = "Invalid email address!"
-            elif not re.match(r"[A-Za-z0-9]+", username):
-                msg = "Username must contain only characters and numbers!"
-            # elif not username or not password or not email:
-            #     msg = 'Please fill out the form!'
-            else:
-                # Hash the password
-                hash = password + app.secret_key
-                hash = hashlib.sha1(hash.encode())
-                password = hash.hexdigest()
-
-                user = User(username=username, password=password, email=email)
-                db.session.add(user)
-                db.session.commit()
-                msg = "You have successfully registered"
-            # return redirect(url_for('login'))
-        else:
-            msg = "Please fill out the form!"
-
-    return render_template("register.html", msg=msg)
-
-
-# Template for login (testing)
-@app.route("/login/", methods=("GET", "POST"))
-def login():
-    msg = ""
-    if (
-        request.method == "POST"
-        and "username" in request.form
-        and "password" in request.form
-    ):
-        username = request.form["username"]
-        password = request.form["password"]
-
-        hash = password + app.secret_key
-        hash = hashlib.sha1(hash.encode())
-        password = hash.hexdigest()
-
-        connection = pymysql.connect(
-            host=db_ip,
-            user=db_user,
-            password=db_password,
-            db=db_name,
-            cursorclass=pymysql.cursors.DictCursor,
-        )
-
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT * FROM user WHERE username = %s AND password = %s",
-                (
-                    username,
-                    password,
-                ),
-            )
-            account = cursor.fetchone()
-
-        if account:
-            session["loggedin"] = True
-            session["id"] = account["id"]
-            session["username"] = account["username"]
-            return redirect(url_for("index"))
-        else:
-            msg = "Incorrect username/password!"
-    return render_template("login.html", msg=msg)
-
-
-# unused?
-@app.route("/logout")
-def logout():
-    session.pop("loggedin", None)
-    session.pop("id", None)
-    session.pop("username", None)
-
-    return redirect(url_for("login"))
-
-
-# Template for creating entries (will always have owner id of 1)
-@app.route("/create/", methods=("GET", "POST"))
-def create():
-    if request.method == "POST":
-        title = request.form["title"]
-        body = request.form["body"]
-        favorite = request.form.get("favorite")
-
-        entry = Entry(
-            title=title, body=body, favorited=favorite is not None, owner_id=1
-        )
-        db.session.add(entry)
-        db.session.commit()
-
-        return redirect(url_for("index"))
-
-    return render_template("create.html")
+    return "🤯"
 
 
 # JWT callback functions
