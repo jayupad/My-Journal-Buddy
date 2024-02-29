@@ -1,8 +1,10 @@
 # My Journal Buddy
-<some description>
+Personal journaling web app with AI integration\
+View the demo [here](https://journal.texasluminescence.org/) _Currently down_\
+Part of [Texas Luminescence](https://texasluminescence.org/)
 
 ## Frontend
-<something here>
+_To be filled in later_
 
 ## Backend
 ### MySQL DB
@@ -23,8 +25,7 @@ _You might need to run ```set-executionpolicy RemoteSigned``` in an administrato
 -- ```venv\Scripts\activate.bat``` for Windows CMD
 - To install all package dependencies for this project, run ```pip install -r requirements.txt``` in the backend directory
 - You can run the python app using ```python app.py```
-_For Linux you might need to use ```python3``` instead of ```python```_
-
+_For Linux you might need to use ```python3``` instead of ```python```_\
 _When changing the DB schema, upon running app.py, respond "Y" to create the db_
 
 ### Testing Routes
@@ -33,3 +34,6 @@ You can use [Postman](https://www.postman.com/) to test your routes
 
 ### JWK Authorization
 - To access a jwt_required protected endpoint, make to to include the access token in the authentication header. By default, this is done with an authorization header that looks like: ```{'Authorization': 'Bearer' + <access_token>}```
+- The first valid access token given upon login is considered fresh, access tokens that are given when using the refresh endpoint are considered not fresh
+- Certain endpoint defined in the [Wiki](https://github.com/jayupad/My-Journal-Buddy/wiki) will require a fresh access token
+- Once an access token expires, it can be refreshed by passing the refresh token in the authorization header to the refresh endpoint
