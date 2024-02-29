@@ -406,7 +406,7 @@ def get_user_entries():
 
 
 @app.route("/api/entries/<id>", methods=["DELETE"])
-@jwt_required()
+@jwt_required(fresh=True)
 def delete_user_entries(id):
     entry = Entry.query.filter_by(id=id).one_or_none()
     if entry:
