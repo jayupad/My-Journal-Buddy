@@ -24,7 +24,7 @@ _Current tested version of Python is [3.10.6](https://www.python.org/downloads/r
     _You might need to run ```set-executionpolicy RemoteSigned``` in an administrator PS prompt for this to work_ 
   - ```venv\Scripts\activate.bat``` for Windows CMD 
 - To install all package dependencies for this project, run ```pip install -r requirements.txt``` in the backend directory
-- You can run the python app using ```python app.py```
+- You can run the python app using ```python app.py``` \
 _For Linux you might need to use ```python3``` instead of ```python```_\
 _When changing the DB schema, upon running app.py, respond "Y" to create the db_
 
