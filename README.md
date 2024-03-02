@@ -30,11 +30,11 @@ _When changing the DB schema, upon running app.py, respond "Y" to create the db_
 
 ### Testing Routes
 You can use [Postman](https://www.postman.com/) to test your routes
-- Endpoints definitions are located in the [Wiki](https://github.com/jayupad/My-Journal-Buddy/wiki)
+- Endpoints definitions are located in the [Wiki](https://github.com/jayupad/My-Journal-Buddy/wiki/Endpoints)
 
 ### JWK Authorization
 - To access a jwt_required protected endpoint, make to to include the access token in the authentication header. By default, this is done with an authorization header that looks like: \
 ```{'Authorization': 'Bearer' + <access_token>}```
 - The first valid access token given upon login is considered fresh, access tokens that are given when using the refresh endpoint are considered not fresh
-- Certain endpoint defined in the [Wiki](https://github.com/jayupad/My-Journal-Buddy/wiki) will require a fresh access token
+- Certain endpoint defined in the [Wiki](https://github.com/jayupad/My-Journal-Buddy/wiki/Endpoints) will require a fresh access token
 - Once an access token expires, it can be refreshed by passing the refresh token in the authorization header to the refresh endpoint
