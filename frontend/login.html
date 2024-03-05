@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Journal Buddy</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-image">
+            
+            <img src="ssofmac.png" alt="Image description">
+        </div>
+        <div class="login-form-container">
+            <h1>My Journal Buddy</h1>
+            <form action="/login" method="post">
+                <input type="text" name="username" placeholder="Username or email">
+                <input type="password" name="password" placeholder="Password">
+                <button type="submit">Log in</button>
+                <div class="divider">OR</div>
+                <button type="button" class="google-login">Log in with Google</button>
+                <a href="/forgot-password">Forgot Password?</a>
+                <div class="signup">
+                    Don’t have an account? <a href="/register">Sign up</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
