@@ -65,3 +65,5 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial display of entries
     updateEntriesDisplay(entries);
 });
+
+
