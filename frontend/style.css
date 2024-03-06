@@ -224,3 +224,28 @@ h1, h2 {
     font-weight: bold;
     margin-bottom: 10px;
 }
+
+/* Add your existing styles from previous CSS here */
+
+.calendar-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+}
+
+.calendar-navigation h2 {
+    margin: 0;
+}
+
+.day-label {
+    text-align: center;
+    padding: 5px 0;
+}
+
+/* Add a little style to the navigation buttons */
+#prev-month,
+#next-month {
+    padding: 5px 10px;
+    cursor: pointer;
+}
