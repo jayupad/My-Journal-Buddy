@@ -21,6 +21,8 @@ from flask_jwt_extended import (
     current_user,
 )
 from dotenv import load_dotenv
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 load_dotenv()
 
@@ -51,6 +53,10 @@ db = SQLAlchemy(app)
 jwt = JWTManager(app)
 
 
+limiter = Limiter(get_remote_address, app=app, default_limits=["200 per day", "50 per hour"], storage_uri="memory://")
+
+mysql_limit = limiter.shared_limit("50 per hour", scope="mysql")
+
 def hash(password):
     hash = password + app.secret_key
     hash = hashlib.sha1(hash.encode())
@@ -78,7 +84,7 @@ class User(db.Model):
 class Entry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     owner_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    favorited = db.Column(db.Boolean, nullable=False)
+    favorite = db.Column(db.Boolean, nullable=False)
     title = db.Column(db.String(255), nullable=False)
     body = db.Column(db.Text, default="", nullable=False)
     datetime = db.Column(db.DateTime(timezone=True), default=datetime.now().date())
@@ -203,6 +209,7 @@ def refresh_api():
 # Entries API
 @app.route("/api/entries/", methods=["POST"])
 @jwt_required(fresh=True)
+@mysql_limit
 # We have fresh set to true b/c we want the user to re-auth after first expiry to modify entries
 # Other routes that don't have fresh set to true allows refreshed keys b/c they are read only
 def create_entry():
@@ -215,7 +222,7 @@ def create_entry():
     owner = current_user.id
 
     entry = Entry(
-        title=title, body=body, favorited=favorite is not None, owner_id=owner
+        title=title, body=body, favorite=favorite is not None, owner_id=owner
     )
 
     db.session.add(entry)
@@ -232,6 +239,7 @@ def create_entry():
 
 @app.route("/api/entries/<id>", methods=["PUT"])
 @jwt_required(fresh=True)
+@mysql_limit
 # We have fresh set to true b/c we want the user to re-auth after first expiry to modify entries
 # Other routes that don't have fresh set to true allows refreshed keys b/c they are read only
 def edit_entry(id):
@@ -248,8 +256,8 @@ def edit_entry(id):
 
                 entry.title = title
                 entry.body = body
-                entry.favorite = favorite
-                entry.lock = lock
+                entry.favorite = favorite is not None
+                entry.lock = lock is not None
 
                 if lock:
                     entry.mood = 8
@@ -337,7 +345,6 @@ def initDB():
 
     with app.app_context():
         db.create_all()
-
 
 if __name__ == "__main__":
     initDB()
