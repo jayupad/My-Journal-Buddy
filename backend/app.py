@@ -7,6 +7,7 @@ import json
 from datetime import timedelta, datetime, timezone
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.sql import func
 from sqlalchemy import exc
@@ -25,6 +26,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 
 # MySQL db connection credentials
 db_user = os.environ["DB_USER"]
