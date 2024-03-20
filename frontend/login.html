@@ -31,7 +31,7 @@
             var username = document.getElementById('username').value;
             var password = document.getElementById('password').value;
 
-            fetch('/api/auth/login/', {
+            fetch('http://127.0.0.1:5000/api/auth/login/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -43,6 +43,7 @@
                 // Login was successful
                 console.log('Login successful', data);
                 // Redirect user or handle login success (e.g., save token, update UI)
+                window.location.href = "index.html";
             })
             .catch(error => {
                 // Login failed
@@ -54,7 +55,7 @@
             var username = document.getElementById('username').value;
             var email = document.getElementById('email').value; 
             var password = document.getElementById('password').value;
-            fetch('/api/auth/register/', {
+            fetch('http://127.0.0.1:5000/api/auth/register/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -75,6 +76,7 @@
             // Registration was successful
             console.log('Registration successful', data);
             // Redirect user or handle registration success
+            window.location.href = "login.html";
         })
         .catch(error => {
             // Registration failed
