@@ -58,7 +58,7 @@ body {
     align-items: center;
 }
 
-input[type="text"],
+input[type="text"],input[type="email"],
 input[type="password"] {
     width: calc(100% - 30px); /* Full width minus padding */
     padding: 15px;
